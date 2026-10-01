@@ -4,7 +4,7 @@
 :root{--bg:#0b0707;--panel:#140c0c;--red:#b3141b;--redhi:#e02a31;--gold:#c9a24b;--ink:#efe6d6;--mute:#8d8174}
 *{box-sizing:border-box}html,body{height:100%;margin:0}
 body{background:radial-gradient(ellipse at 50% -10%,#2a0b0d 0,var(--bg) 60%);color:var(--ink);font:17px/1.55 Georgia,"Times New Roman",serif;display:flex;flex-direction:column;align-items:center}
-.wrap{width:100%;max-width:760px;height:100%;display:flex;flex-direction:column;padding:0 16px}
+.wrap{width:100%;max-width:760px;height:100%;height:100dvh;display:flex;flex-direction:column;padding:0 16px}
 header{text-align:center;padding:22px 0 10px;border-bottom:1px solid #3a1a1a;position:relative}
 .smile{width:54px;height:54px;border-radius:50%;background:var(--red);margin:0 auto 8px;position:relative;box-shadow:0 0 28px #b3141b66}
 .smile:before,.smile:after{content:"";position:absolute;top:16px;width:7px;height:7px;background:var(--bg);border-radius:50%}
@@ -26,6 +26,7 @@ input,select{background:#120b0b;border:1px solid #3a1a1a;color:var(--ink);paddin
 button:hover{background:var(--redhi)}button:disabled{opacity:.5}
 details{color:var(--mute);font-size:14px;padding-bottom:6px}summary{cursor:pointer}
 .row{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}.row input{flex:1;min-width:200px}
+@media(max-width:600px){h1{font-size:19px;letter-spacing:.3em}.m{max-width:94%;font-size:16px}.row input,.row select{width:100%}button{padding:0 14px}}
 footer{font-size:12px;color:var(--mute);text-align:center;padding:4px 0 12px}
 </style></head><body><div class="wrap">
 <header><div class="smile"><i></i></div><h1>The <b>Mentalist</b></h1><div class="tag">"I don't read minds. I read people."</div></header>
