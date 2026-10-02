@@ -30,10 +30,10 @@ details{color:var(--mute);font-size:14px;padding-bottom:6px}summary{cursor:point
 footer{font-size:12px;color:var(--mute);text-align:center;padding:4px 0 12px}
 </style></head><body><div class="wrap">
 <header><div class="smile"><i></i></div><h1>The <b>Mentalist</b></h1><div class="tag">"I don't read minds. I read people."</div></header>
-<div id="log"><div class="m j">Ah, a visitor. Sit. Tea? Tell me something, anything, and I'll tell you what you didn't mean to say. First, though, the boring part: paste your API key below.</div></div>
-<details id="set"><summary>Settings (key stays in your browser)</summary>
+<div id="log"><div class="m j">Ah, a visitor. Sit. Tea? Tell me something, anything, and I'll tell you what you didn't mean to say. </div></div>
+<details id="set"><summary>Settings (optional)</summary>
 <div class="row"><select id="prov"><option value="nvidia">NVIDIA Nemotron 3 Ultra</option><option value="gemini">Google Gemini</option></select>
-<input id="key" type="password" placeholder="API key" autocomplete="off"></div>
+<input id="key" type="password" placeholder="Gemini API key (only if you pick Gemini)" autocomplete="off"></div>
 <div class="row"><input id="proxy" placeholder="Proxy URL for NVIDIA (blank = this server's /api/chat)"></div></details>
 <form id="f"><input id="q" placeholder="Say something, Mr. Jane will do the rest..." autocomplete="off"><button id="go">Send</button></form>
 <footer>Unofficial fan project for fun. Not affiliated with the show, its makers or any network. Jane's "readings" are guesses from your words, not psychic powers.</footer>
@@ -42,7 +42,7 @@ footer{font-size:12px;color:var(--mute);text-align:center;padding:4px 0 12px}
 <script>
 const C=window.MENTALIST_CONFIG,$=id=>document.getElementById(id),log=$("log"),hist=[];
 const ls=(k,v)=>v===undefined?localStorage.getItem(k):localStorage.setItem(k,v);
-$("prov").value=ls("m_prov")||C.provider;$("key").value=ls("m_key_"+$("prov").value)||"";$("proxy").value=ls("m_proxy")||C.proxyUrl;
+$("prov").value=ls("m_prov")||C.provider;$("key").value=ls("m_key_"+$("prov").value)||"";$("proxy").value=C.proxyUrl||ls("m_proxy")||"";
 $("prov").onchange=()=>{ls("m_prov",$("prov").value);$("key").value=ls("m_key_"+$("prov").value)||""};
 $("key").onchange=()=>ls("m_key_"+$("prov").value,$("key").value.trim());$("proxy").onchange=()=>ls("m_proxy",$("proxy").value.trim());
 function add(c,t){const d=document.createElement("div");d.className="m "+c;d.textContent=t;log.appendChild(d);log.scrollTop=1e9;return d}
@@ -55,7 +55,7 @@ async function ask(){
     const j=await r.json();if(!r.ok)throw Error(j.error?.message||r.status);return j.candidates?.[0]?.content?.parts?.map(x=>x.text).join("")||"(silence)";
   }
   const base=$("proxy").value.trim();const url=base||"/api/chat";
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key},
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",},
     body:JSON.stringify({model:C.nvidia.model,messages:[{role:"system",content:JANE_PROMPT},...hist],max_tokens:700,temperature:0.8})});
   const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error?.message||j.detail||("HTTP "+r.status+(base?"":" - on GitHub Pages you need a proxy URL or run python server.py")));
   return j.choices?.[0]?.message?.content||"(silence)";
