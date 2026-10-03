@@ -46,20 +46,34 @@ $("prov").value=ls("m_prov")||C.provider;$("key").value=ls("m_key_"+$("prov").va
 $("prov").onchange=()=>{ls("m_prov",$("prov").value);$("key").value=ls("m_key_"+$("prov").value)||""};
 $("key").onchange=()=>ls("m_key_"+$("prov").value,$("key").value.trim());$("proxy").onchange=()=>ls("m_proxy",$("proxy").value.trim());
 function add(c,t){const d=document.createElement("div");d.className="m "+c;d.textContent=t;log.appendChild(d);log.scrollTop=1e9;return d}
-async function ask(){
+async function gem(key){
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${C.gemini.model}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
+    body:JSON.stringify({systemInstruction:{parts:[{text:JANE_PROMPT}]},contents:hist.map(h=>({role:h.role==="assistant"?"model":"user",parts:[{text:h.content}]}))})});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error?.message||("HTTP "+r.status));return j.candidates?.[0]?.content?.parts?.map(x=>x.text).join("")||"(silence)";
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function nv(base){
+  const url=base||"/api/chat";
+  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",},
+    body:JSON.stringify({model:C.nvidia.model,messages:[{role:"system",content:JANE_PROMPT},...hist],max_tokens:700,temperature:0.8})});
+  const j=await r.json().catch(()=>({}));if(!r.ok){const e=Error(j.error?.message||j.detail||("HTTP "+r.status+(base?"":" - on GitHub Pages you need a proxy URL or run python server.py")));e.status=r.status;throw e}
+  return j.choices?.[0]?.message?.content||"(silence)";
+}
+async function ask(note){
   const p=$("prov").value,key=$("key").value.trim();
   if(p==="gemini"){
     if(!key)throw Error("Paste a Gemini API key in Settings first.");
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${C.gemini.model}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
-      body:JSON.stringify({systemInstruction:{parts:[{text:JANE_PROMPT}]},contents:hist.map(h=>({role:h.role==="assistant"?"model":"user",parts:[{text:h.content}]}))})});
-    const j=await r.json();if(!r.ok)throw Error(j.error?.message||r.status);return j.candidates?.[0]?.content?.parts?.map(x=>x.text).join("")||"(silence)";
+    return gem(key);
   }
-  const base=$("proxy").value.trim();const url=base||"/api/chat";
-  const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",},
-    body:JSON.stringify({model:C.nvidia.model,messages:[{role:"system",content:JANE_PROMPT},...hist],max_tokens:700,temperature:0.8})});
-  const j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.error?.message||j.detail||("HTTP "+r.status+(base?"":" - on GitHub Pages you need a proxy URL or run python server.py")));
-  return j.choices?.[0]?.message?.content||"(silence)";
+  const base=$("proxy").value.trim();let last;
+  for(let i=1;i<=4;i++){
+    try{return await nv(base)}
+    catch(e){last=e;const transient=e.status===undefined||e.status===429||e.status>=500;if(!transient||i===4)break;note&&note(i);await sleep(1500*i)}
+  }
+  const gk=ls("m_key_gemini");
+  if(gk){note&&note(0);try{return await gem(gk)}catch(e){last=e}}
+  throw Error((last&&last.message==="Failed to fetch"?"The AI service dropped the connection":last&&last.message)+" (tried 4 times). NVIDIA's free tier is busy. Try again in a minute, or add a Gemini key in Settings as a fallback.");
 }
 $("f").onsubmit=async e=>{e.preventDefault();const t=$("q").value.trim();if(!t)return;$("q").value="";add("u",t);hist.push({role:"user",content:t});$("go").disabled=true;
-  const w=add("j","...");try{const a=await ask();w.textContent=a;hist.push({role:"assistant",content:a})}catch(x){w.className="m sys";w.textContent="Something went wrong: "+x.message;hist.pop()}$("go").disabled=false;$("q").focus()};
+  const w=add("j","...");try{const a=await ask(n=>{w.textContent=n?"... (the line is busy, retrying "+n+"/3)":"... (switching to Gemini)"});w.textContent=a;hist.push({role:"assistant",content:a})}catch(x){w.className="m sys";w.textContent="Something went wrong: "+x.message;hist.pop()}$("go").disabled=false;$("q").focus()};
 </script></body></html>
