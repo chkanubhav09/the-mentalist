@@ -19,4 +19,5 @@ Edit one line in `config.js`: `provider: "nvidia"` or `"gemini"`. Default is NVI
 No key is ever committed. Keys live in the env var, a git-ignored `.env`, or your browser's localStorage.
 
 ## Status
-Untested against live NVIDIA/Gemini keys by the author of this scaffold: first real run may need tweaks.
+
+Tested on 3 Oct 2026 against the live site (https://chkanubhav09.github.io/the-mentalist/) and its Cloudflare Worker proxy: the proxy and the NVIDIA key work, and Jane replies in character when NVIDIA's free hosted endpoint answers (roughly 9 to 20 seconds per reply). That endpoint is rate-limited and often returns "Service temporarily overloaded" (503) or drops the connection, so in testing many messages failed with an error and had to be resent. The Gemini option (bring your own key) has not been tested.
